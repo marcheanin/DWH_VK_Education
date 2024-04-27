@@ -64,6 +64,7 @@ class ProductStat(SparkSubmitTask):
     city_path = luigi.Parameter()
     price_path = luigi.Parameter()
     product_path = luigi.Parameter()
+    product_for_stat_path = luigi.Parameter()
     output_path = luigi.Parameter()
     
     def output(self):
@@ -79,6 +80,7 @@ class ProductStat(SparkSubmitTask):
             self.city_path,
             self.price_path,
             self.product_path,
+            self.product_for_stat_path,
             self.output_path,
         ]
     

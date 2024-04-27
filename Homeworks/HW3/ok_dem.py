@@ -57,7 +57,7 @@ def main(argv):
     PriceStatDF = spark.read.option("header", "true").csv(price_stat_path, sep=';')
 
     # cast data to DataFrame
-
+    
     CityDF = (
         CityDF
         .select(
@@ -95,6 +95,16 @@ def main(argv):
             sf.col("_c0").cast(IntegerType()).alias("city_id"),
             sf.col("_c1").cast(IntegerType()).alias("product_id"),
             sf.col("_c2").cast(FloatType()).alias("price")
+        )
+    )
+
+    PriceStatDF = (
+        PriceStatDF
+        .select(
+            sf.col("product_id").cast(IntegerType()),
+            sf.col("max_price").cast(FloatType()),
+            sf.col("avg_price").cast(FloatType()),
+            sf.col("min_price").cast(FloatType())
         )
     )
 

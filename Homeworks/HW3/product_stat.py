@@ -20,6 +20,7 @@ def main(argv):
     city_path = argv[2]
     price_path = argv[3]
     product_path = argv[4]
+    product_for_stat_path = argv[5]
     output_path = argv[5]
 
     spark = SparkSession.builder.getOrCreate()
@@ -49,6 +50,13 @@ def main(argv):
             .csv(product_path)
     )
 
+    ProductsForStatDF = (
+        spark.read
+            .option("header", "false")
+            .option("sep", ";")
+            .csv(product_for_stat_path)
+    )
+    
     # cast data to DataFrame
 
     CityDF = (
@@ -78,8 +86,37 @@ def main(argv):
         )
     )
 
+    ProductsForStatDF = (
+        ProductsForStatDF
+        .select(
+            sf.col("_c0").cast(IntegerType()).alias("product_id")
+        )
+    )
+
+    ok_dem = (
+        ok_dem
+        .select(
+            sf.col("city_name"),
+            sf.col("user_cnt").cast(IntegerType()),
+            sf.col("age_avg").cast(IntegerType()),
+            sf.col("men_cnt").cast(IntegerType()),
+            sf.col("women_cnt").cast(IntegerType()),
+            sf.col("men_share").cast(FloatType()),
+            sf.col("women_share").cast(FloatType())
+        )
+    )
 
     # Joins and Aggs
+
+    PriceJoinedDF = (
+        PriceDF
+        .join(ProductsForStatDF, PriceDF.product_id == ProductsForStatDF.product_id, how='inner')
+            .select(
+                PriceDF.product_id,
+                sf.col("city_id"),
+                sf.col("price")
+        )
+    )
 
     vals_for_stat = ok_dem.agg(
             sf.max(sf.col("age_avg")),
@@ -106,7 +143,7 @@ def main(argv):
 
     CitiesForStatPricesDF = (
         CitiesForStatDF.alias("left")
-        .join(PriceDF, CitiesForStatDF.city_id == PriceDF.city_id, how='inner')
+        .join(PriceJoinedDF, CitiesForStatDF.city_id == PriceDF.city_id, how='inner')
             .select(
                 sf.col("left.city_id"),
                 sf.col("city"),
